@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model Ticket {
+	ticket_ID				Int					@id @default(autoincrement())
+	//ticketNumber		String					@unique
+	//Users that can access the information
+	customer					User					@relation("Customer", fields: [customerID], references: [user_ID])
+	customerID				String
+	description				String?
+	summary					String?
+	resolution				String
+	createdAt				DateTime				@default(now())
+	updatedAt				DateTime				@updatedAt
+
+	//Relations
+	//1-n
+	company					Company				@relation("SupportedCompany", fields: [companyID], references: [company_ID])
+	companyID				Int
+	
+	//1-n
+	ticketImpact				Impact//				@relation("TicketImpact", fields: [impactID], references: [impact_ID])
+	//impactID					Int
+
+	//1-n
+	ticketUrgency				Urgency//				@relation("TicketUrgency", fields: [urgencyID], references: [urgency_ID])
+	//urgencyID				Int
+
+	//1-n
+	//priority					Priority				@relation("TicketPriority", fields: [priorityID], references: [priority_ID])
+	//priorityID				Int
+
+	//1-n
+	assignedGroup			Group					@relation("TicketSupportTeam", fields: [assignedGroupID], references: [group_ID])
+	assignedGroupID		Int
+	
+	//n-1
+	worklogs					Worklog[]			@relation("TicketWorklogs")
+	
+	status						ITILTicketStatus	@default(NEW)
+	//statusReason			StatusReason
+	
+	
+	assignedTech				User?					@relation("AssignedSupportTech", fields: [assignedTechID], references: [user_ID])
+	assignedTechID			String?
+	
+}
+
+model Worklog {
+	worklog_ID				String					@id @default(uuid())
+
+	parentTicket			Ticket				@relation("TicketWorklogs", fields: [parentTicketID], references: [ticket_ID])
+	parentTicketID			Int
+	description				String
+	createdAt				DateTime				@default(now())
+	
+}
+
+model Company{
+	company_ID				Int					@id @default(autoincrement())
+	company_name			String					@unique
+	
+	assignedTickets			Ticket[]				@relation("SupportedCompany")
+}
+
+enum Urgency {
+	VERYLOW4				@map("Very Low - 4")
+	LOW3					@map("Low - 3")
+	MEDIUM2				@map("Medium - 2")
+	HIGH1					@map("High - 1")
+}
+
+enum Impact {
+	PERSONAL				@map("Personal - 5")
+	SMALL					@map("Small - 4")
+	MEDIUM				@map("Medium - 3")
+	WIDESPREAD			@map("Widespread - 2")
+	UNIVERSAL			@map("Universal - 1")
+}
+
+/*
+model Priority {
+	
+	P4
+}
+*/
+
+model Group {
+	group_ID				Int					@id @default(autoincrement())
+	groupName				String
+
+	assignedTickets			Ticket[]				@relation("TicketSupportTeam")
+	
+	assignedTechs			User[]					@relation("AssignedTechGroups")
+}
+
+enum ITILTicketStatus {
+	NEW								@map("New")
+	ASSIGNED						@map("Assigned")
+	IN_PROGRESS					@map("In Progress")
+	IN_REVIEW					@map("In Review")
+	APPROVED						@map("Approved")
+	PENDING						@map("Pending")
+	RESOLVED						@map("Resolved")
+	REJECTED						@map("Rejected")
+	CLOSED							@map("Closed")
+	CANCELLED						@map("Cancelled")
+}
+
+model User {
+	user_ID					String					@id @default(cuid())
+	externalId				String					@unique
+	email						String					@unique
+	username					String?
+	createdAt				DateTime				@default(now())
+	updatedAt				DateTime				@updatedAt
+
+	assignedGroups			Group[]				@relation("AssignedTechGroups")
+	
+	assignedTickets			Ticket[]				@relation("AssignedSupportTech")
+	createdTickets			Ticket[]				@relation("Customer")
+}
+
