@@ -137,3 +137,42 @@ export async function getProductStats() {
     })),
   };
 }
+
+// Nombre d'items par page (constante facilement modifiable)
+const ITEMS_PER_PAGE = 5;
+
+/**
+ * Pagination par offset (skip/take).
+ * Retourne les produits de la page demandee + les metadonnees.
+ */
+export async function getProductsPaginated(page: number = 1) {
+  // Securite : la page doit etre >= 1
+  const currentPage = Math.max(1, page);
+  const skip = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  // Promise.all pour executer les 2 requetes en parallele
+  // (1 pour les donnees, 1 pour le total)
+  const [products, totalCount] = await Promise.all([
+    prisma.product.findMany({
+      skip,
+      take: ITEMS_PER_PAGE,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.product.count(),
+  ]);
+
+  // Calcul du nombre total de pages (arrondi au superieur)
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  return {
+    products,
+    pagination: {
+      currentPage,
+      totalPages,
+      totalCount,
+      itemsPerPage: ITEMS_PER_PAGE,
+      hasPrevious: currentPage > 1,
+      hasNext: currentPage < totalPages,
+    },
+  };
+}
