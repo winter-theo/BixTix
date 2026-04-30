@@ -7,6 +7,7 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/nextjs";
+import { CartBadge } from "@/app/components/CartBadge";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,6 +40,9 @@ export default function RootLayout({
           <header className="flex justify-between items-center p-4 border-b h-16">
             <h1 className="text-xl font-bold">BixTix</h1>
             <div className="flex gap-4 items-center">
+              <Show when="signed-in">
+                <CartBadge />
+              </Show>
               <Show when="signed-out">
                 <SignInButton />
                 <SignUpButton />
