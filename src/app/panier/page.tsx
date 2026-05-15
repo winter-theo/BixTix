@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getCartByUserId, getCartTotal } from "@/lib/queries/cart";
 import { CartItemRow } from "@/app/components/CartItemRow";
 import { ClearCartButton } from "@/app/components/ClearCartButton";
+import { CheckoutButton } from "@/app/components/CheckoutButton";
 
 export default async function PanierPage() {
   const user = await getCurrentUser();
@@ -21,7 +22,6 @@ export default async function PanierPage() {
   const cart = await getCartByUserId(user.id);
   const total = await getCartTotal(user.id);
 
-  // Etat vide
   if (!cart || cart.items.length === 0) {
     return (
       <div className="p-4 sm:p-8">
@@ -82,13 +82,7 @@ export default async function PanierPage() {
       </div>
 
       <div className="text-right">
-        <button
-          disabled
-          title="Disponible au Lab 3 (paiement Stripe)"
-          className="bg-gray-300 text-gray-600 rounded-md px-6 py-3 cursor-not-allowed"
-        >
-          Passer la commande (Lab 3)
-        </button>
+        <CheckoutButton />
       </div>
     </div>
   );

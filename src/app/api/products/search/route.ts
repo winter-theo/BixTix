@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchProducts } from "@/lib/queries/products";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 /**
  * Recherche avancee avec filtres et tri
  */
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  const limit = rateLimit(ip);
+  if (!limit.ok) {
+    return NextResponse.json({ error: "Trop de requetes" }, { status: 429 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
-
-    // Extraction des parametres de l'URL
     const search = searchParams.get("q") ?? undefined;
     const minPriceStr = searchParams.get("minPrice");
     const maxPriceStr = searchParams.get("maxPrice");
@@ -19,7 +24,6 @@ export async function GET(request: NextRequest) {
       | null;
     const sortOrder = searchParams.get("sortOrder") as "asc" | "desc" | null;
 
-    // Conversion des prix en nombres si fournis
     const minPrice = minPriceStr ? Number(minPriceStr) : undefined;
     const maxPrice = maxPriceStr ? Number(maxPriceStr) : undefined;
 
@@ -30,7 +34,6 @@ export async function GET(request: NextRequest) {
       sortBy: sortBy ?? undefined,
       sortOrder: sortOrder ?? undefined,
     });
-
     return NextResponse.json(
       {
         results: products,
